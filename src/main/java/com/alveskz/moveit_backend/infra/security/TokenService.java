@@ -16,26 +16,28 @@ import java.time.ZoneOffset;
 public class TokenService {
     @Value("${api.security.token.secret}")
     private String secret;
-    public String generateToken(User user) {
+    public String generateToken(User user){
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
 
             String token = JWT.create()
-                    .withIssuer("moveit-backend")
+                    .withIssuer("login-auth-api")
                     .withSubject(user.getEmail())
                     .withExpiresAt(this.generateExpirationDate())
                     .sign(algorithm);
             return token;
-        } catch (JWTCreationException exception) {
+        } catch (JWTCreationException exception){
             throw new RuntimeException("Error while authenticating");
         }
     }
 
-    public String validateToken(String token) {
+    public String validateToken(String token){
+        if (token == null || token.isBlank()) return null;
+
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             return JWT.require(algorithm)
-                    .withIssuer("moveit-backend")
+                    .withIssuer("login-auth-api")
                     .build()
                     .verify(token)
                     .getSubject();
@@ -44,7 +46,8 @@ public class TokenService {
         }
     }
 
-    private Instant generateExpirationDate() {
+
+    private Instant generateExpirationDate(){
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
 }
